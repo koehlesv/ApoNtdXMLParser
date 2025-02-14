@@ -64,5 +64,4 @@ Drücken Sie oben links auf den Fragezeichenknopf oder drücken Sie die F1 - Tas
 In Delphi.
 
 ### Auf welchen Betriebssystemen läuft die Software?
-Mutmaßlich läuft die Software auf Windows XP SP 3 sowie auf allen neueren Windows-Betriebssystemen.
-Details: Entwickelt und getestet wurde die Software auf Windows 11. Für Windows Vista wurde ein erfolgreicher Installationstest durchgeführt. Auf allen anderen Systemen wurden keine Tests durchgeführt und für diese kann daher keine qualifizierte Aussage getroffen werden.
+Die Software funktioniert auf Windows Vista SP 2, Windows 7, Windows 8, Windows 8.1, Windows 10, Windows 11 und mutmaßlich auch auf neueren Systemen. Entwickelt und getestet wurde die Software auf Windows 11, auf Windows Vista SP 2 wurde ein Installationstest durchgeführt.

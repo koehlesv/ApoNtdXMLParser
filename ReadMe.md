@@ -65,3 +65,7 @@ In Delphi.
 
 ### Auf welchen Betriebssystemen läuft die Software?
 Die Software funktioniert auf Windows Vista SP 2, Windows 7, Windows 8, Windows 8.1, Windows 10, Windows 11 und mutmaßlich auch auf neueren Systemen. Entwickelt und getestet wurde die Software auf Windows 11, auf Windows Vista SP 2 wurde ein Installationstest durchgeführt.
+
+### Wie kann ich Fehler oder neue Funktionswünsche melden?
+https://github.com/koehlesv/ApoNtdXMLParser/issues
+Bitte beachten Sie, dass keine Bearbeitungsgarantie erfolgt und die Umsetzung einige Zeit in Anspruch nehmen kann.

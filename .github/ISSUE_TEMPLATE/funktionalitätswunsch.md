@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**WICHTIG: Die Issues sind öffentlich. Bitte keine persönlichen Daten hinzufügen!**
+
+
 **Hängt die gewünschte neue Funktionalität mit einem Fehler zusammen?.**
 Falls ja, bitte erläutern.
 

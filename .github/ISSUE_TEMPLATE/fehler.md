@@ -7,6 +7,9 @@ assignees: koehlesv
 
 ---
 
+**WICHTIG: Die Issues sind öffentlich. Bitte keine persönlichen Daten hinzufügen!**
+
+
 **Beschreibung**
 Eine kurze Zusammenfassung, welcher Fehler (und an welcher Stelle) er auftritt.
 

@@ -46,7 +46,8 @@ Stand: 25.01.2025.
 Wenn Sie die Einstellungen ändern wollen, müssen Sie nicht jedes Mal eine Verbindung ins Internet herstellen. Ebenso muss nicht jedes Mal eine Ausgabedatei erstellt werden, bevor Sie mit dem Ergebnis zufrieden sind. Möglicherweise reicht Ihnen auch bereits die Anzeige auf dem Bildschirm - auch hier muss nicht unbedingt eine Ausgabedatei erstellt werden.
 
 ### Warum gibt es dieses Programm überhaupt?
-Weil die LAK im Bundesland des/der Entwickler*in keinen ausgedruckten Papierplan mehr zur Verfügung stellt. Nun könnte man jedes Mal zu einer Apotheke zu fahren und dort den aktuellen Aushang betrachten oder auf Onlinequellen (wie etwa "Aponet") zurückgreifen, die allerdings oft nur einen bis wenige Tage in die Zukunft reichen; Dieses Programm soll hier helfen.
+Weil die LAK im Bundesland des/der Entwickler*in keinen ausgedruckten Papierplan mehr zur Verfügung stellt. Nun könnte man jedes Mal zu einer Apotheke zu fahren und dort den aktuellen Aushang betrachten oder auf Onlinequellen zurückgreifen, die oft nur einen bis wenige Tage in die Zukunft reichen (gleichzeitig); Dieses Programm soll hier helfen.
+Aktuelle Daten finden Sie beispielsweise auf "Aponet" oder oft auf den Seiten von Apotheken oder der Landesapothekenkammer.
 
 ### Wie kann ich das Programm ohne Maus bedienen?
 Die Standard-Windows-Funktionen wie Tabulatortaste, um weiterzuschalten und bekannte Kürzel wie STRG + V um Inhalte einzufügen sind in diesem Programm selbstverständlich enthalten. Buttons können außerdem (wenn kein Feld ausgewählt ist, das eine Eingabe unterstützt) auch "gedrückt" werden, wenn man den in der Button-Bezeichnung unterstrichenen Buchstaben drückt. Ist kein solcher sichtbar, bitte die ALT - Taste drücken.

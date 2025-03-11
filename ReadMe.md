@@ -69,5 +69,5 @@ Die Software funktioniert auf Windows Vista SP 2, Windows 7, Windows 8, Windows 
 
 ### Wie kann ich Fehler oder neue Funktionswünsche melden?
 https://github.com/koehlesv/ApoNtdXMLParser/issues
-Wichtig: Alle Informationen, welche Sie dort teilen, öffentlich. Bitte daher keinerlei private bzw. persönliche Daten angeben!
+Wichtig: Alle Informationen, welche Sie dort teilen, sind öffentlich. Bitte daher keinerlei private bzw. persönliche Daten angeben!
 Bitte beachten Sie, dass keine Bearbeitungsgarantie erfolgt und die Umsetzung einige Zeit in Anspruch nehmen kann.

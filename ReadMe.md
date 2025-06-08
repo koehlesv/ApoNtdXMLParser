@@ -79,10 +79,10 @@ Auf Windowssystemen gibt es die Aufgabenplanung. Dort kann eine neue Aufgabe ang
 
 Gültige Argumente (Werte in Großbuchstaben entsprechend ersetzen, nur der Teil vor dem -- darf angegeben werden):
 
-ExecuteDirect --Immer angeben, wenn kein Dialog angezeigt werden soll. Nur in diesem Fall werden die anderen Parameter beachtet.
-Print --Optional. Druckt das Ergebnis auf dem Standarddrucker
-"Print:NAME DES DRUCKERS" --Optional. Druckt das Ergebnis auf demjenigen Drucker, der angegeben wurde. Wird kein Drucker dieses Namens gefunden, so wird stattdessen der Standarddrucker benutzt.
-"Save:ZIELDATEIPFAD" --Optional. Speichert in ein beliebiges Zielverzeichnis (dieses muss existieren und Sie benötigen dort Schreibrechte) anstatt in dasselbe Verzeichnis wie die EXE-Datei.
-Log --Optional. Speichert eine Log-Datei ins selbe Verzeichnis wie die EXE-Datei.
-"Log:ZIELVERZEICHNIS" --Optional. Speichert eine Logdatei ins angegebene Zielverzeichnis.
-AppendLog --Optional. Anstatt die Logdatei immer neu zu schreiben wird diese nun um die neuen Daten erweitert.
+- ExecuteDirect --Immer angeben, wenn kein Dialog angezeigt werden soll. Nur in diesem Fall werden die anderen Parameter beachtet.
+- Print --Optional. Druckt das Ergebnis auf dem Standarddrucker
+- "Print:NAME DES DRUCKERS" --Optional. Druckt das Ergebnis auf demjenigen Drucker, der angegeben wurde. Wird kein Drucker dieses Namens gefunden, so wird stattdessen der Standarddrucker benutzt.
+- "Save:ZIELDATEIPFAD" --Optional. Speichert in ein beliebiges Zielverzeichnis (dieses muss existieren und Sie benötigen dort Schreibrechte) anstatt in dasselbe Verzeichnis wie die EXE-Datei.
+- Log --Optional. Speichert eine Log-Datei ins selbe Verzeichnis wie die EXE-Datei.
+- "Log:ZIELVERZEICHNIS" --Optional. Speichert eine Logdatei ins angegebene Zielverzeichnis.
+- AppendLog --Optional. Anstatt die Logdatei immer neu zu schreiben wird diese nun um die neuen Daten erweitert.

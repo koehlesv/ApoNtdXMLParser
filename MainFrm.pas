@@ -67,8 +67,8 @@ type
     procedure btnZeigeTelNrsClick(Sender: TObject);
     procedure btnProgrammBeendenClick(Sender: TObject);
     procedure btnDatenDruckenClick(Sender: TObject);
-    procedure DatenSpeichern(AList: TStrings);
-    procedure DatenDrucken(AList: TStrings; AColour: TColor);
+    procedure DatenSpeichern(AList: TStrings; ADateiname: string = '');
+    procedure DatenDrucken(AList: TStrings; AColour: TColor; const APrinterName: string = '');
     procedure actDatenSpeichernExecute(Sender: TObject);
     procedure actDatenDruckenExecute(Sender: TObject);
     procedure btnDatenKopierenClick(Sender: TObject);
@@ -81,8 +81,9 @@ type
     FErwEinstObj: TErwEinstObj;
     FAposList: TStringList; //Nur gesetzt, falls "alten Modus nachstellen" gesetzt ist, und anschließend auf "Daten anzeigen" geklickt wurde.
     FAllesLoeschen: Boolean;
+    FMitDialog: Boolean;
     FSonderfktSchluesselw: string;
-    procedure ReformatData();
+    function ReformatData(): Boolean;
     procedure ZeigeHilfeDialog();
     function LizenzdateiHatKorrekteVersion(const APath: string): Boolean;
     function GetSelectedXMLTType(): TXMLType;
@@ -96,10 +97,15 @@ type
     function MergeMDBFileAndGivenList_Create(AList: TStringList): TStringList;
     procedure GetNummerUndBuchstabenVonApotheke(APersistenteApothekenListe: TStringList; const AApotheke: string; out ANummer: Integer; out ABuchstaben: string);
     function GetColour(const AText: string): TColor;
+    procedure DoInit();
+    function LadeDatenAusDemInternet(const AUrl: string; AAXMTyp: TXMLType): Boolean;
+    procedure SpeichereMdbDateiOhneDial();
   public
+    { Public-Deklarationen }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    { Public-Deklarationen }
+    class procedure ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
+      AWriteLog, AAppendLog: Boolean; ALogPath: string);
   end;
 
   TXMLParser = class(TObject)
@@ -227,48 +233,8 @@ begin
 end;
 
 procedure TfrmMain.btnDatenAusInternetLadenClick(Sender: TObject);
-var
-  Url : String;
-  ErgebnisGueltig: HRESULT;
 begin
-  Url := memoApiUrl.Text;
-  if Url = '' then
-  begin
-     MessageDlg('Die Api-URL darf nicht leer sein. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-     Exit;
-  end;
-  if GetSelectedXMLTType() = xmltUnd then
-  begin
-    MessageDlg('Bitte den verwendeten XML-Typ auswählen.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-    Exit;
-  end;
-  {if GetSelectedXMLTType() = xmltNRW then
-  begin
-    MessageDlg('Bitte laden Sie die Datei direkt von der Apotheker*innenkammer Nordrhein-Westfalen herunter und speichern Sie diese als "Apothekennotdienstplan.xml"' +
-      'im selben Verzeichnis wie dieses Programm ab; ein Direktdownload ist leider nicht möglich.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-    Exit;
-  end;}
-  if ((GetSelectedXMLTType() in [xmltBWU, xmltBay]) and (not Url.StartsWith('https://notdienst.sberg.net/', True)) and (not Url.StartsWith('http://notdienst.sberg.net/', True))) or
-    ((GetSelectedXMLTType() = xmltNRW) and (not Url.StartsWith('https://www.aknr.de/', True)) and (not Url.StartsWith('http://www.aknr.de/', True))) or
-    ((GetSelectedXMLTType() = xmltSWH) and (not Url.StartsWith('https://www.aksh-service.de/', True)) and (not Url.StartsWith('http://www.aksh-service.de/', True))) or
-    ((GetSelectedXMLTType() = xmltTHU) and (not Url.StartsWith('https://www.lakt.de/', True)) and (not Url.StartsWith('http://www.lakt.de/', True))) then
-  begin
-     MessageDlg('Die Api-URL verlinkt auf eine nicht unterstütze Webseite. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss. Die Url beginnt mit http:// oder https:// .' +
-       sLineBreak + 'Gegebenenfalls passt der Webseitentyp auch nicht zum ausgewählten XML-Format.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-     Exit;
-  end;
-  if FileExists(cNameXMLDatei) then
-  begin
-    if MessageDlg('Die Zieldatei existiert bereits und wird überschrieben. Soll diese überschrieben werden?', TMsgDlgType.mtWarning, [mbYes, mbCancel], 0) <> mrYes then
-      Exit;
-  end;
-  ErgebnisGueltig := UrlDownloadToFile(nil, PChar(Url), PChar(cNameXMLDatei), 0, nil);
-  case ErgebnisGueltig of
-    S_OK: ; //Erwünschter Fall;
-    E_OUTOFMEMORY: MessageDlg('Es steht nicht genügend Speicher zur Verfügung, um die angeforderten Daten herunterzuladen.', TMsgDlgType.mtError, [mbClose], 0);
-    INET_E_DOWNLOAD_FAILURE: MessageDlg('Downloadfehler. Bitte prüfen Sie Ihre Internetverbindung, Ihre Firewall und die angegebene URL.', TMsgDlgType.mtError, [mbClose], 0);
-  end;
-
+  LadeDatenAusDemInternet(memoApiUrl.Text, GetSelectedXMLTType());
 end;
 
 procedure TfrmMain.btnDatenDruckenClick(Sender: TObject);
@@ -762,9 +728,10 @@ begin
   inherited Create(AOwner);
   FErwEinstObj := TErwEinstObj.Create;
   FAposList := TStringList.Create();
+  FMitDialog := True;
 end;
 
-procedure TfrmMain.DatenDrucken(AList: TStrings; AColour: TColor);
+procedure TfrmMain.DatenDrucken(AList: TStrings; AColour: TColor; const APrinterName: string {Defaulr ''});
 label
   ZeileFortsetzen;
 var
@@ -776,8 +743,10 @@ var
 begin
   PrintDialogue := TPrintDialog.Create(nil);
   try
-    if PrintDialogue.Execute() then
+    if (not FMitDialog) or PrintDialogue.Execute() then
     begin
+      if not FMitDialog and (APrinterName <> '') then
+        Vcl.Printers.Printer.PrinterIndex := Vcl.Printers.Printer.Printers.IndexOf(APrinterName);
       TmpList := TStringList.Create;
       try
         Printer.BeginDoc;
@@ -853,27 +822,56 @@ begin
   end;
 end;
 
-procedure TfrmMain.DatenSpeichern(AList: TStrings);
+procedure TfrmMain.DatenSpeichern(AList: TStrings; ADateiname: string {Default ''});
+const
+  FNOhneDial = 'ApothekenNotdienstPlan.txt';
 var
   SaveDialogue: TSaveDialog;
   Ausgabe: TStringList;
 begin
-  SaveDialogue := TSaveDialog.Create(nil);
-  try
-    SaveDialogue.DefaultExt := 'txt';
-    SaveDialogue.Filter := 'Textdateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*';
-    SaveDialogue.Options := SaveDialogue.Options + [ofOldStyleDialog, ofOverwritePrompt];
-    if SaveDialogue.Execute() then
-    begin
-      Ausgabe := TKodierungsHelfer.CreateStringListNewEncoding(FErwEinstObj.KodierungDL, FErwEinstObj.FKodierungDS, AList);
-      try
-        Ausgabe.SaveToFile(SaveDialogue.FileName, FErwEinstObj.KodierungDS);
-      finally
-        Ausgabe.Free;
+  if FMitDialog then
+  begin
+    SaveDialogue := TSaveDialog.Create(nil);
+    try
+      SaveDialogue.DefaultExt := 'txt';
+      SaveDialogue.Filter := 'Textdateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*';
+      SaveDialogue.Options := SaveDialogue.Options + [ofOldStyleDialog, ofOverwritePrompt];
+      if SaveDialogue.Execute() then
+      begin
+        Ausgabe := TKodierungsHelfer.CreateStringListNewEncoding(FErwEinstObj.KodierungDL, FErwEinstObj.FKodierungDS, AList);
+        try
+          Ausgabe.SaveToFile(SaveDialogue.FileName, FErwEinstObj.KodierungDS);
+        finally
+          Ausgabe.Free;
+        end;
       end;
+    finally
+      SaveDialogue.Free;
     end;
-  finally
-    SaveDialogue.Free;
+  end
+  else
+  begin
+    Ausgabe := TKodierungsHelfer.CreateStringListNewEncoding(FErwEinstObj.KodierungDL, FErwEinstObj.FKodierungDS, AList);
+    try
+      Ausgabe.SaveToFile(FNOhneDial, FErwEinstObj.KodierungDS);
+      if ADateiname <> '' then
+      begin
+        if not EndsText('.txt', ADateiname) then
+        begin
+          if not EndsText('\', ADateiname) or not EndsText('/', ADateiname) then
+          begin
+            if ADateiname.Contains('/') then
+              ADateiname := ADateiname + '/'
+            else
+              ADateiname := ADateiname + '\';
+          end;
+          ADateiname := ADateiname + FNOhneDial;
+        end;
+        MoveFile(PChar(FNOhneDial), PChar(ADateiname));
+      end;
+    finally
+      Ausgabe.Free;
+    end;
   end;
 end;
 
@@ -882,6 +880,138 @@ begin
   FAposList.Free;
   FErwEinstObj.Free;
   inherited Destroy;
+end;
+
+procedure TfrmMain.DoInit;
+var
+  SettingsObj: TSettingsObj;
+  LizenzDateiSchreiben: TStringList;
+begin
+  if (not FileExists(cNameLizenzDatei)) or (not LizenzdateiHatKorrekteVersion(cNameLizenzDatei)) then
+  begin
+    with TfrmLizenzdialog.Create(nil) do
+    begin
+      try
+        if ShowModal <> mrOk then
+          Halt;
+      finally
+        Free;
+      end;
+    end;
+    LizenzDateiSchreiben := TStringList.Create;
+    try
+      LizenzDateiSchreiben.Add(cLizenzVersion);
+      LizenzDateiSchreiben.SaveToFile(cNameLizenzDatei);
+    finally
+      LizenzDateiSchreiben.Free;
+    end;
+  end;
+  memoAusgabe.Clear();
+  memoAusgabe.Lines.Add('Alle Angaben ohne Gewähr. Änderungen sind jederzeit möglich.');
+  memoAusgabe.Lines.Add('Die Notdienstdaten wurden durch die für Sie zuständige Landesapotheker*innenkammer ' +
+    TSettingsManager.GetNameForXMLTyp(GetSelectedXMLTType) + ' zur Verfügung gestellt.');
+  SettingsObj := TSettingsManager.LoadSettings(cNameEinstellungsDatei);
+  try
+    cbEinstellungenSpeichern.Checked := SettingsObj.EinstellungenSpeichern;
+    cbApiURLSpeichern.Checked := SettingsObj.ApiUrlSpeichern;
+    cbXMLBehalten.Checked := SettingsObj.XMLDateiBehalten;
+    rbDatenBuendeln.Checked := SettingsObj.AusgabedatenBuendeln;
+    rbDatenNichtBuendeln.Checked := not SettingsObj.AusgabedatenBuendeln;
+    rbAltenStilNacherzeugen.Checked := SettingsObj.AltenModusNachstellen;
+    cbDoppelteEntfernen.Checked := SettingsObj.DoppelteEintraegeZusammenfassen;
+    cbKompakteDarstellung.Checked := SettingsObj.Kompakt;
+    if SettingsObj.ApiUrlSpeichern then
+      memoApiUrl.Text := SettingsObj.ApiUrl;
+    SetXMLTypToCombobox(SettingsObj.XMLTyp);
+    FErwEinstObj.KodierungDL := SettingsObj.KodierungDL;
+    FErwEinstObj.KodierungDS := SettingsObj.KodierungDS;
+  finally
+    SettingsObj.Free;
+  end;
+  if FileExists(cNameMDBDatei) then
+  begin
+    btnMdbSpeichern.Visible := True;
+    btnMdbDrucken.Visible := True;
+  end;
+end;
+
+class procedure TfrmMain.ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
+  AWriteLog, AAppendLog: Boolean; ALogPath: string);
+const
+  cLogname = 'ApothekenNotdienstPlan.log';
+var
+  LFrmMain: TfrmMain;
+  Log: TStringList;
+  LMitDialog: Boolean;
+begin
+  Log := TStringList.Create();
+  try
+    if AWriteLog then
+    begin
+      if not EndsText('.log', ALogPath) and not EndsText('.txt', ALogPath) then
+      begin
+        if not EndsText('\', ALogPath) or not EndsText('/', ALogPath) then
+        begin
+          if ALogPath.Contains('/') then
+            ALogPath := ALogPath + '/'
+          else
+            ALogPath := ALogPath + '\';
+        end;
+        ALogPath := ALogPath + cLogname;
+      end
+      else
+        ALogPath := cLogname;
+      if AAppendLog and FileExists(ALogPath) then
+        Log.LoadFromFile(ALogPath);
+    end;
+    LFrmMain := TfrmMain.Create(nil);
+    try
+      LMitDialog := LFrmMain.FMitDialog;
+      try
+        LFrmMain.FMitDialog := False;
+        LFrmMain.DoInit();
+        if AWriteLog then
+          Log.Add(DateTimeToStr(Now) + ': Lade XML-Daten via Online-API');
+        if not LFrmMain.LadeDatenAusDemInternet(LFrmMain.memoApiUrl.Text, LFrmMain.GetSelectedXMLTType()) then
+          Exit;
+        if AWriteLog then
+          Log.Add(DateTimeToStr(Now) + ': Reformatiere Daten');
+        if not LFrmMain.ReformatData() then
+          Exit;
+        if AWriteLog then
+          Log.Add(DateTimeToStr(Now) + ': Speichere Daten ' + ASpeicherpfad);
+        LFrmMain.DatenSpeichern(LFrmMain.memoAusgabe.Lines, ASpeicherpfad);
+        //if LFrmMain.rbAltenStilNacherzeugen.Checked then
+          //LFrmMain.SpeichereMdbDateiOhneDial;
+        if APrintDirect then
+        begin
+          if AWriteLog then
+            Log.Add(DateTimeToStr(Now) + ': Drucken ' + ADruckername);
+          LFrmMain.DatenDrucken(LFrmMain.memoAusgabe.Lines, LFrmMain.GetColour(LFrmMain.FSonderfktSchluesselw), ADruckername);
+        end;
+        if ((not LFrmMain.cbXMLBehalten.Checked) or (LFrmMain.FAllesLoeschen)) and FileExists(cNameXMLDatei) then
+        begin
+          if AWriteLog then
+            Log.Add(DateTimeToStr(Now) + ': Lösche XML-Datei');
+          DeleteFile(cNameXMLDatei);
+        end;
+      finally
+        LFrmMain.FMitDialog := LMitDialog;
+      end;
+    finally
+      FreeAndNil(LFrmMain);
+    end;
+  finally
+    try
+      if AWriteLog then
+      begin
+        Log.Add(DateTimeToStr(Now) + ': Schließe Log-Datei und beende Programm.');
+        Log.SaveToFile(ALogPath);
+      end;
+    finally
+      FreeAndNil(Log);
+    end;
+  end;
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -940,56 +1070,8 @@ begin
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
-var
-  SettingsObj: TSettingsObj;
-  LizenzDateiSchreiben: TStringList;
 begin
-  if (not FileExists(cNameLizenzDatei)) or (not LizenzdateiHatKorrekteVersion(cNameLizenzDatei)) then
-  begin
-    with TfrmLizenzdialog.Create(nil) do
-    begin
-      try
-        if ShowModal <> mrOk then
-          Halt;
-      finally
-        Free;
-      end;
-    end;
-    LizenzDateiSchreiben := TStringList.Create;
-    try
-      LizenzDateiSchreiben.Add(cLizenzVersion);
-      LizenzDateiSchreiben.SaveToFile(cNameLizenzDatei);
-    finally
-      LizenzDateiSchreiben.Free;
-    end;
-  end;
-  memoAusgabe.Clear();
-  memoAusgabe.Lines.Add('Alle Angaben ohne Gewähr. Änderungen sind jederzeit möglich.');
-  memoAusgabe.Lines.Add('Die Notdienstdaten wurden durch die für Sie zuständige Landesapotheker*innenkammer ' +
-    TSettingsManager.GetNameForXMLTyp(GetSelectedXMLTType) + ' zur Verfügung gestellt.');
-  SettingsObj := TSettingsManager.LoadSettings(cNameEinstellungsDatei);
-  try
-    cbEinstellungenSpeichern.Checked := SettingsObj.EinstellungenSpeichern;
-    cbApiURLSpeichern.Checked := SettingsObj.ApiUrlSpeichern;
-    cbXMLBehalten.Checked := SettingsObj.XMLDateiBehalten;
-    rbDatenBuendeln.Checked := SettingsObj.AusgabedatenBuendeln;
-    rbDatenNichtBuendeln.Checked := not SettingsObj.AusgabedatenBuendeln;
-    rbAltenStilNacherzeugen.Checked := SettingsObj.AltenModusNachstellen;
-    cbDoppelteEntfernen.Checked := SettingsObj.DoppelteEintraegeZusammenfassen;
-    cbKompakteDarstellung.Checked := SettingsObj.Kompakt;
-    if SettingsObj.ApiUrlSpeichern then
-      memoApiUrl.Text := SettingsObj.ApiUrl;
-    SetXMLTypToCombobox(SettingsObj.XMLTyp);
-    FErwEinstObj.KodierungDL := SettingsObj.KodierungDL;
-    FErwEinstObj.KodierungDS := SettingsObj.KodierungDS;
-  finally
-    SettingsObj.Free;
-  end;
-  if FileExists(cNameMDBDatei) then
-  begin
-    btnMdbSpeichern.Visible := True;
-    btnMdbDrucken.Visible := True;
-  end;
+  DoInit();
 end;
 
 function TfrmMain.GetColour(const AText: string): TColor;
@@ -1039,7 +1121,7 @@ begin
     Exit(clDkGray)
   else if FSonderfktSchluesselw.Substring(StartPosSdfktSpeichern).StartsWith('clWhite', True) then
     Exit(clWhite)
-  else if FSonderfktSchluesselw.Substring(StartPosSdfktSpeichern).StartsWith('clGolf', True) then
+  else if FSonderfktSchluesselw.Substring(StartPosSdfktSpeichern).StartsWith('clPaschWa', True) then
     Exit(ColorToRGB(18 + 17 shl 8 + 58 shl 16));
 end;
 
@@ -1096,6 +1178,62 @@ begin
     xmltSWH: Result := '</notdienst>';
     xmltTHU: Result := '</VEVENT>';
   end;
+end;
+
+function TfrmMain.LadeDatenAusDemInternet(const AUrl: string;
+  AAXMTyp: TXMLType): Boolean;
+var
+  ErgebnisGueltig: HRESULT;
+begin
+  Result := True;
+  if AUrl = '' then
+  begin
+     if FMitDialog then
+       MessageDlg('Die Api-URL darf nicht leer sein. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
+     Exit(False);
+  end;
+  if GetSelectedXMLTType() = xmltUnd then
+  begin
+    if FMitDialog then
+      MessageDlg('Bitte den verwendeten XML-Typ auswählen.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
+    Exit(False);
+  end;
+  {if GetSelectedXMLTType() = xmltNRW then
+  begin
+    MessageDlg('Bitte laden Sie die Datei direkt von der Apotheker*innenkammer Nordrhein-Westfalen herunter und speichern Sie diese als "Apothekennotdienstplan.xml"' +
+      'im selben Verzeichnis wie dieses Programm ab; ein Direktdownload ist leider nicht möglich.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
+    Exit;
+  end;}
+  if ((GetSelectedXMLTType() in [xmltBWU, xmltBay]) and (not AUrl.StartsWith('https://notdienst.sberg.net/', True)) and (not AUrl.StartsWith('http://notdienst.sberg.net/', True))) or
+    ((GetSelectedXMLTType() = xmltNRW) and (not AUrl.StartsWith('https://www.aknr.de/', True)) and (not AUrl.StartsWith('http://www.aknr.de/', True))) or
+    ((GetSelectedXMLTType() = xmltSWH) and (not AUrl.StartsWith('https://www.aksh-service.de/', True)) and (not AUrl.StartsWith('http://www.aksh-service.de/', True))) or
+    ((GetSelectedXMLTType() = xmltTHU) and (not AUrl.StartsWith('https://www.lakt.de/', True)) and (not AUrl.StartsWith('http://www.lakt.de/', True))) then
+  begin
+     if FMitDialog then
+       MessageDlg('Die Api-URL verlinkt auf eine nicht unterstütze Webseite. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss. Die Url beginnt mit http:// oder https:// .' +
+         sLineBreak + 'Gegebenenfalls passt der Webseitentyp auch nicht zum ausgewählten XML-Format.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
+     Exit(False);
+  end;
+  if FileExists(cNameXMLDatei) then
+  begin
+    if FMitDialog and (MessageDlg('Die Zieldatei existiert bereits und wird überschrieben. Soll diese überschrieben werden?', TMsgDlgType.mtWarning, [mbYes, mbCancel], 0) <> mrYes) then
+      Exit(False);
+  end;
+  ErgebnisGueltig := UrlDownloadToFile(nil, PChar(AUrl), PChar(cNameXMLDatei), 0, nil);
+  if FMitDialog then
+  begin
+    case ErgebnisGueltig of
+      S_OK: ; //Erwünschter Fall;
+      E_OUTOFMEMORY: MessageDlg('Es steht nicht genügend Speicher zur Verfügung, um die angeforderten Daten herunterzuladen.', TMsgDlgType.mtError, [mbClose], 0);
+      INET_E_DOWNLOAD_FAILURE: MessageDlg('Downloadfehler. Bitte prüfen Sie Ihre Internetverbindung, Ihre Firewall und die angegebene URL.', TMsgDlgType.mtError, [mbClose], 0);
+    end;
+  end
+  else
+  begin
+    if ErgebnisGueltig <> S_OK then
+      Exit(False);
+  end;
+
 end;
 
 function TfrmMain.LizenzdateiHatKorrekteVersion(const APath: string): Boolean;
@@ -1185,7 +1323,7 @@ begin
   cbDoppelteEntfernen.Enabled := False;
 end;
 
-procedure TfrmMain.ReformatData;
+function TfrmMain.ReformatData: Boolean;
 var
   FirstTimeEntered: Boolean;
   I, AktNummer, LetztNr: Integer;
@@ -1196,10 +1334,12 @@ var
   Separator: string;
   XMLTyp: TXMLType;
 begin
+  Result := True;
   if not FileExists(cNameXMLDatei) then
   begin
-    MessageDlg('Die benötigte XML-Datei konnte nicht gefunden werden. Diese muss den Namen ' + cNameXMLDatei + ' tragen.', TMsgDlgType.mtError, [mbClose], 0);
-    Exit;
+    if FMitDialog then
+      MessageDlg('Die benötigte XML-Datei konnte nicht gefunden werden. Diese muss den Namen ' + cNameXMLDatei + ' tragen.', TMsgDlgType.mtError, [mbClose], 0);
+    Exit(False);
   end;
   memoAusgabe.Clear();
   memoAusgabe.Lines.Add('Alle Angaben ohne Gewähr. Änderungen sind jederzeit möglich.');
@@ -1470,6 +1610,22 @@ begin
     xmltTHU: SetXMLStringToCombobox(cXMLTypThu);
   end;
 
+end;
+
+procedure TfrmMain.SpeichereMdbDateiOhneDial;
+var
+  MdbInhalt: TStringList;
+begin
+  if FileExists(cNameMDBDatei) then
+  begin
+    MdbInhalt := TStringList.Create();
+    try
+      MdbInhalt.LoadFromFile(cNameMDBDatei);
+      MdbInhalt.SaveToFile('Apothekennotdienstplan_Apothekenuebersicht.txt');
+    finally
+      MdbInhalt.Free;
+    end;
+  end;
 end;
 
 function TfrmMain.SpeichernMitSonderfunktionFallsUebergeben(AList: TStrings): Boolean;

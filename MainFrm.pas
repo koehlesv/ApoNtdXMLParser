@@ -83,7 +83,7 @@ type
     FAllesLoeschen: Boolean;
     FMitDialog: Boolean;
     FSonderfktSchluesselw: string;
-    function ReformatData(): Boolean;
+    function ReformatData(ALog: TStrings = nil): Boolean;
     procedure ZeigeHilfeDialog();
     function LizenzdateiHatKorrekteVersion(const APath: string): Boolean;
     function GetSelectedXMLTType(): TXMLType;
@@ -98,14 +98,14 @@ type
     procedure GetNummerUndBuchstabenVonApotheke(APersistenteApothekenListe: TStringList; const AApotheke: string; out ANummer: Integer; out ABuchstaben: string);
     function GetColour(const AText: string): TColor;
     procedure DoInit();
-    function LadeDatenAusDemInternet(const AUrl: string; AAXMTyp: TXMLType): Boolean;
+    function LadeDatenAusDemInternet(const AUrl: string; AAXMTyp: TXMLType; ALog: TStrings = nil): HRESULT;
     procedure SpeichereMdbDateiOhneDial();
   public
     { Public-Deklarationen }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    class procedure ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
-      AWriteLog, AAppendLog: Boolean; ALogPath: string);
+    class function ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
+      AWriteLog, AAppendLog: Boolean; ALogPath: string): Integer;
   end;
 
   TXMLParser = class(TObject)
@@ -213,7 +213,7 @@ implementation
 
 uses
   URLMon, System.UITypes, LizenzdialogFrm, ErweiterteEinstellungenFrm, VCL.Printers, ShellApi,
-  TelefonnumernAnzeigenFrm, StrUtils, ComCtrls, DateUtils;
+  TelefonnumernAnzeigenFrm, StrUtils, ComCtrls, DateUtils, AccCtrl, AclApi;
 
 {$R *.dfm}
 
@@ -935,8 +935,8 @@ begin
   end;
 end;
 
-class procedure TfrmMain.ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
-  AWriteLog, AAppendLog: Boolean; ALogPath: string);
+class function TfrmMain.ExecWithoutDialogue(APrintDirect: Boolean; const ADruckername: string; const ASpeicherpfad: string;
+  AWriteLog, AAppendLog: Boolean; ALogPath: string): Integer;
 const
   cLogname = 'ApothekenNotdienstPlan.log';
 var
@@ -944,72 +944,99 @@ var
   Log: TStringList;
   LMitDialog: Boolean;
 begin
-  Log := TStringList.Create();
+  Result := NOERROR;
+  Log := nil;
+  if AWriteLog then
+    Log := TStringList.Create();
   try
-    if AWriteLog then
-    begin
-      if not EndsText('.log', ALogPath) and not EndsText('.txt', ALogPath) then
-      begin
-        if not EndsText('\', ALogPath) or not EndsText('/', ALogPath) then
-        begin
-          if ALogPath.Contains('/') then
-            ALogPath := ALogPath + '/'
-          else
-            ALogPath := ALogPath + '\';
-        end;
-        ALogPath := ALogPath + cLogname;
-      end
-      else
-        ALogPath := cLogname;
-      if AAppendLog and FileExists(ALogPath) then
-        Log.LoadFromFile(ALogPath);
-    end;
-    LFrmMain := TfrmMain.Create(nil);
     try
-      LMitDialog := LFrmMain.FMitDialog;
+      if AWriteLog then
+      begin
+        if not EndsText('.log', ALogPath) and not EndsText('.txt', ALogPath) then
+        begin
+          if (not EndsText('\', ALogPath) or not EndsText('/', ALogPath)) and (ALogPath <> '') then
+          begin
+            if ALogPath.Contains('/') then
+              ALogPath := ALogPath + '/'
+            else
+              ALogPath := ALogPath + '\';
+          end;
+          ALogPath := ALogPath + cLogname;
+        end
+        else
+          ALogPath := cLogname;
+        if AAppendLog and FileExists(ALogPath) then
+          Log.LoadFromFile(ALogPath);
+      end;
+      LFrmMain := TfrmMain.Create(nil);
       try
-        LFrmMain.FMitDialog := False;
-        LFrmMain.DoInit();
-        if AWriteLog then
-          Log.Add(DateTimeToStr(Now) + ': Lade XML-Daten via Online-API');
-        if not LFrmMain.LadeDatenAusDemInternet(LFrmMain.memoApiUrl.Text, LFrmMain.GetSelectedXMLTType()) then
-          Exit;
-        if AWriteLog then
-          Log.Add(DateTimeToStr(Now) + ': Reformatiere Daten');
-        if not LFrmMain.ReformatData() then
-          Exit;
-        if AWriteLog then
-          Log.Add(DateTimeToStr(Now) + ': Speichere Daten ' + ASpeicherpfad);
-        LFrmMain.DatenSpeichern(LFrmMain.memoAusgabe.Lines, ASpeicherpfad);
-        //if LFrmMain.rbAltenStilNacherzeugen.Checked then
-          //LFrmMain.SpeichereMdbDateiOhneDial;
-        if APrintDirect then
-        begin
+        LMitDialog := LFrmMain.FMitDialog;
+        try
+          LFrmMain.FMitDialog := False;
+          LFrmMain.DoInit();
           if AWriteLog then
-            Log.Add(DateTimeToStr(Now) + ': Drucken ' + ADruckername);
-          LFrmMain.DatenDrucken(LFrmMain.memoAusgabe.Lines, LFrmMain.GetColour(LFrmMain.FSonderfktSchluesselw), ADruckername);
-        end;
-        if ((not LFrmMain.cbXMLBehalten.Checked) or (LFrmMain.FAllesLoeschen)) and FileExists(cNameXMLDatei) then
-        begin
+            Log.Add(DateTimeToStr(Now) + ': Lade XML-Daten via Online-API');
+          //Result := LFrmMain.LadeDatenAusDemInternet(LFrmMain.memoApiUrl.Text, LFrmMain.GetSelectedXMLTType(), Log);
+          if Result <> S_OK then
+          begin
+            if AWriteLog then
+              Log.Add('  [FEHLER] Fehlercode: ' + IntToStr(Result));
+            Exit(Result);
+          end;
           if AWriteLog then
-            Log.Add(DateTimeToStr(Now) + ': Lösche XML-Datei');
-          DeleteFile(cNameXMLDatei);
+            Log.Add(DateTimeToStr(Now) + ': Reformatiere Daten');
+          if not LFrmMain.ReformatData(Log) then
+            Exit(3);
+          if AWriteLog then
+            Log.Add(DateTimeToStr(Now) + ': Speichere Daten ' + ASpeicherpfad);
+          LFrmMain.DatenSpeichern(LFrmMain.memoAusgabe.Lines, ASpeicherpfad);
+          //if LFrmMain.rbAltenStilNacherzeugen.Checked then
+            //LFrmMain.SpeichereMdbDateiOhneDial;
+          if APrintDirect then
+          begin
+            if AWriteLog then
+              Log.Add(DateTimeToStr(Now) + ': Drucken ' + ADruckername);
+            LFrmMain.DatenDrucken(LFrmMain.memoAusgabe.Lines, LFrmMain.GetColour(LFrmMain.FSonderfktSchluesselw), ADruckername);
+          end;
+          if ((not LFrmMain.cbXMLBehalten.Checked) or (LFrmMain.FAllesLoeschen)) and FileExists(cNameXMLDatei) then
+          begin
+            if AWriteLog then
+              Log.Add(DateTimeToStr(Now) + ': Lösche XML-Datei');
+            DeleteFile(cNameXMLDatei);
+          end;
+        finally
+          LFrmMain.FMitDialog := LMitDialog;
         end;
       finally
-        LFrmMain.FMitDialog := LMitDialog;
+        FreeAndNil(LFrmMain);
       end;
-    finally
-      FreeAndNil(LFrmMain);
+    except
+      on E: Exception do
+      begin
+        if AWriteLog then
+          Log.Add(E.Message);
+        try
+          if AWriteLog then
+            Log.SaveToFile(ALogPath);
+        except
+        begin
+          Log.Free;
+          Log := nil;
+        end;
+        end;
+        if ExitCode = 0 then
+          ExitCode := -1;
+      end;
     end;
   finally
     try
-      if AWriteLog then
+      if AWriteLog and (Log <> nil) then
       begin
         Log.Add(DateTimeToStr(Now) + ': Schließe Log-Datei und beende Programm.');
         Log.SaveToFile(ALogPath);
       end;
     finally
-      FreeAndNil(Log);
+      Log.Free;
     end;
   end;
 end;
@@ -1181,22 +1208,26 @@ begin
 end;
 
 function TfrmMain.LadeDatenAusDemInternet(const AUrl: string;
-  AAXMTyp: TXMLType): Boolean;
+  AAXMTyp: TXMLType; ALog: TStrings {Default nil}): HRESULT;
 var
   ErgebnisGueltig: HRESULT;
 begin
-  Result := True;
+  Result := S_OK;
   if AUrl = '' then
   begin
      if FMitDialog then
        MessageDlg('Die Api-URL darf nicht leer sein. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-     Exit(False);
+     if ALog <> nil then
+       ALog.Add('  [FEHLER] Es ist keine Api-URL hinterlegt.');
+     Exit(-1);
   end;
   if GetSelectedXMLTType() = xmltUnd then
   begin
     if FMitDialog then
       MessageDlg('Bitte den verwendeten XML-Typ auswählen.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-    Exit(False);
+    if ALog <> nil then
+       ALog.Add('  [FEHLER] Es ist kein XML-Typ hinterlegt.');
+    Exit(-1);
   end;
   {if GetSelectedXMLTType() = xmltNRW then
   begin
@@ -1212,12 +1243,23 @@ begin
      if FMitDialog then
        MessageDlg('Die Api-URL verlinkt auf eine nicht unterstütze Webseite. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss. Die Url beginnt mit http:// oder https:// .' +
          sLineBreak + 'Gegebenenfalls passt der Webseitentyp auch nicht zum ausgewählten XML-Format.', TMsgDlgType.mtError, [TMsgDlgBtn.mbClose], 0);
-     Exit(False);
+     if ALog <> nil then
+       ALog.Add('  [FEHLER] Die Api-URL verlinkt auf eine nicht unterstütze Webseite. Gegebenenfalls in der Hilfe nachlesen, wie eine Api-URL aufgebaut sein muss. Die Url beginnt mit http:// oder https:// .' +
+         'Gegebenenfalls passt der Webseitentyp auch nicht zum ausgewählten XML-Format.');
+     Exit(-1);
   end;
   if FileExists(cNameXMLDatei) then
   begin
+    if ALog <> nil then
+    begin
+       ALog.Add('  [WARNUNG] Die XML-Datei existiert bereits.');
+       if FMitDialog then
+         ALog.Add('  [INFO] Es wird ein Dialog angezeigt, ob die Datei überschrieben werden soll.')
+       else
+         ALog.Add('  [WARNUNG] Die XML-Datei wird überschrieben.');
+    end;
     if FMitDialog and (MessageDlg('Die Zieldatei existiert bereits und wird überschrieben. Soll diese überschrieben werden?', TMsgDlgType.mtWarning, [mbYes, mbCancel], 0) <> mrYes) then
-      Exit(False);
+      Exit(-1);
   end;
   ErgebnisGueltig := UrlDownloadToFile(nil, PChar(AUrl), PChar(cNameXMLDatei), 0, nil);
   if FMitDialog then
@@ -1231,7 +1273,7 @@ begin
   else
   begin
     if ErgebnisGueltig <> S_OK then
-      Exit(False);
+      Exit(ErgebnisGueltig);
   end;
 
 end;
@@ -1323,7 +1365,7 @@ begin
   cbDoppelteEntfernen.Enabled := False;
 end;
 
-function TfrmMain.ReformatData: Boolean;
+function TfrmMain.ReformatData(ALog: TStrings {Default nil}): Boolean;
 var
   FirstTimeEntered: Boolean;
   I, AktNummer, LetztNr: Integer;
@@ -1339,6 +1381,8 @@ begin
   begin
     if FMitDialog then
       MessageDlg('Die benötigte XML-Datei konnte nicht gefunden werden. Diese muss den Namen ' + cNameXMLDatei + ' tragen.', TMsgDlgType.mtError, [mbClose], 0);
+    if ALog <> nil then
+       ALog.Add('  [FEHLER] Die XML-Datei existiert nicht.');
     Exit(False);
   end;
   memoAusgabe.Clear();

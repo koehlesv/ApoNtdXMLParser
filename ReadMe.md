@@ -16,7 +16,7 @@ Laden Sie die .exe-Datei herunter und führen Sie diese aus.
 6. Sie sind verpflichtet, die ausgegebenen Daten selbst auf Korrektheit und Vollständigkeit zu prüfen.
 7. Diese Software darf nur in Übereinstimmung mit der internationalen Erklärung der Menschenrechte verwendet werden, wie von der Generalversammlung der Vereinten Nationen am 10. Dezember 1948 beschlossen.
 8. Die Nutzung der Software oder des Codes ist nur zulässig, wenn diese Nutzungsbedingungen vollumfänglich akzeptiert und eingehalten werden.
-9. Abschnitt 7 der Nutzungsbedingungen muss in allen abgeleiteten Werken enthalten sein & die Nutzdenden müssen diesem vor der Nutzung explizit zustimmen.
+9. Abschnitt 7 der Nutzungsbedingungen muss in allen abgeleiteten Werken enthalten sein & die Nutzenden müssen diesem vor der Nutzung explizit zustimmen.
 10. Sollten einzelne Teile dieser Lizenz ungültig sein, so bleiben die restlichen Bestandteile unverändert in Kraft.
 
 ## Anleitung

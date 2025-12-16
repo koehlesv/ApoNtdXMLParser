@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, Vcl.ExtCtrls;
 
 type
   TfrmLizenzdialog = class(TForm)
@@ -18,6 +18,7 @@ type
     ActionList1: TActionList;
     actLizenzSpeichern: TAction;
     actLizenzDrucken: TAction;
+    Panel1: TPanel;
     procedure cbLizenzGelesenUndAkzeptiertClick(Sender: TObject);
     procedure btnBeendenClick(Sender: TObject);
     procedure btnLizenzSpeichernClick(Sender: TObject);

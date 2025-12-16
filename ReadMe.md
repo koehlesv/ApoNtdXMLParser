@@ -4,7 +4,7 @@
 Dieses Programm liest eine XML-Datei bzw. -Schnittstelle aus, um den Notdienstplan der Apotheken anzuzeigen. Dies funktioniert nur für die Schnittstellen von Baden-Württemberg, Bayern, Nordrhein-Westfalen, Schleswig-Holstein und Thüringen - alle anderen Landesapotheker*innenkammern stell(t)en zum Programmierzeitpunkt keinen frei verfügbaren XML-Service zur Verfügung.
 
 ## Installation
-Laden Sie die .exe-Datei herunter und führen Sie diese aus.
+Laden Sie die .exe-Datei herunter und führen Sie diese aus. Dies geht meistens auf der rechten Seite unter "Releases" -> "ApoNtdXMLParser". Hierbei bezeichnet "x86" die Version für 32-Bit-Systeme, und "x64" die Version für 64-Bit-Systeme. Im Zweifelsfall können Sie beide Dateien herunterladen und diejenige Datei starten, die auf Ihrem System ausführbar ist.
 
 ## Nutzungsbedingungen und Informationen
 

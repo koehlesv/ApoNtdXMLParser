@@ -73,6 +73,9 @@ https://github.com/koehlesv/ApoNtdXMLParser/issues
 Wichtig: Alle Informationen, welche Sie dort teilen, sind öffentlich. Bitte daher keinerlei private bzw. persönliche Daten angeben!
 Bitte beachten Sie, dass keine Bearbeitungsgarantie erfolgt und die Umsetzung einige Zeit in Anspruch nehmen kann.
 
+### Warum besitzen die "Releases" Schlagworte bzw. Beschreibungen, welche nicht dem üblichen Schema entsprechen?
+Dieses Programm ist hauptsächlich für Anwender*innen, die sich so wenig wie möglich mit den technischen Details auseinander setzten sollten müssen.
+
 ## Automatisierte Ausführung
 
 Auf Windowssystemen gibt es die Aufgabenplanung. Dort kann eine neue Aufgabe angelegt werden. Vergeben Sie einen beliebigen Namen und klicken Sie auf Aktionen und fügen Sie dort eine neue hinzu. Dort stellen Sie die bei "Aktion" den Wert "Programm starten", bei Programm/Skript den Pfad zum Programm (Ggf. auf "Durchsuchen" klicken), in das Feld "Argumente hinzufügen" die Werte "ExecuteDirect" und ggf. weitere (siehe unten, jeweils getrennt durch Leerzeichen) eingeben und schließlich im Feld "Starten in" denselben Pfad wie bei Programm/Skript eintragen, nur ohne das /ApothekenNotdienstplan.exe am Ende. Sowohl der Schrägstrich als auch der Name der Exe-Datei müssen dort entfernt werden.

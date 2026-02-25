@@ -134,7 +134,7 @@ object frmMain: TfrmMain
     Top = 238
     Width = 497
     Height = 17
-    Caption = 'Doppelte Eintr'#228'ge zusdammenfassen (m'#246'glicherweise fehlerhaft)'
+    Caption = 'Doppelte Eintr'#228'ge zusammenfassen (m'#246'glicherweise fehlerhaft)'
     TabOrder = 7
   end
   object cbKompakteDarstellung: TCheckBox

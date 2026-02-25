@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, Vcl.ExtCtrls;
 
 type
   TXMLType = (xmltUnd, xmltBWU, xmltBay, xmltNRW, xmltSWH, xmltTHU);
@@ -52,6 +52,12 @@ type
     btnMdbDrucken: TButton;
     btnNurAposSpeichern: TButton;
     btnNurApoDrucken: TButton;
+    Panel1: TPanel;
+    Panel3: TPanel;
+    Panel4: TPanel;
+    Panel5: TPanel;
+    Panel2: TPanel;
+    Panel6: TPanel;
     procedure btnDatenAusInternetLadenClick(Sender: TObject);
     procedure btnDatenReformatierenClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);

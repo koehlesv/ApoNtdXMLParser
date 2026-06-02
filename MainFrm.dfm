@@ -239,7 +239,7 @@ object frmMain: TfrmMain
       TabOrder = 2
       object btnDatenDrucken: TButton
         AlignWithMargins = True
-        Left = 376
+        Left = 377
         Top = 7
         Width = 121
         Height = 25
@@ -247,14 +247,15 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Caption = 'Daten &drucken...'
         TabOrder = 2
         OnClick = btnDatenDruckenClick
+        ExplicitLeft = 376
       end
       object btnMdbDrucken: TButton
         AlignWithMargins = True
-        Left = 237
+        Left = 75
         Top = 7
         Width = 119
         Height = 25
@@ -267,10 +268,11 @@ object frmMain: TfrmMain
         TabOrder = 4
         Visible = False
         OnClick = btnMdbDruckenClick
+        ExplicitLeft = 237
       end
       object btnNurApoDrucken: TButton
         AlignWithMargins = True
-        Left = 75
+        Left = 215
         Top = 7
         Width = 142
         Height = 25
@@ -278,15 +280,16 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Caption = 'Apotheke&n drucken...'
         TabOrder = 1
         Visible = False
         OnClick = btnNurApoDruckenClick
+        ExplicitLeft = 75
       end
       object btnProgrammBeenden: TButton
         AlignWithMargins = True
-        Left = 517
+        Left = 518
         Top = 7
         Width = 125
         Height = 25
@@ -294,12 +297,13 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Cancel = True
         Caption = 'Programm &beenden'
         ModalResult = 8
         TabOrder = 3
         OnClick = btnProgrammBeendenClick
+        ExplicitLeft = 517
       end
       object Panel2: TPanel
         Left = 0
@@ -329,7 +333,7 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Caption = 'Daten &kopieren'
         TabOrder = 2
         OnClick = btnDatenKopierenClick
@@ -344,14 +348,14 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Caption = 'Daten &speichern...'
         TabOrder = 1
         OnClick = btnDatenSpeichernClick
       end
       object btnMdbSpeichern: TButton
         AlignWithMargins = True
-        Left = 236
+        Left = 75
         Top = 7
         Width = 121
         Height = 25
@@ -364,10 +368,11 @@ object frmMain: TfrmMain
         TabOrder = 3
         Visible = False
         OnClick = btnMdbSpeichernClick
+        ExplicitLeft = 236
       end
       object btnNurAposSpeichern: TButton
         AlignWithMargins = True
-        Left = 75
+        Left = 216
         Top = 7
         Width = 141
         Height = 25
@@ -375,11 +380,12 @@ object frmMain: TfrmMain
         Margins.Top = 7
         Margins.Right = 10
         Margins.Bottom = 9
-        Align = alLeft
+        Align = alRight
         Caption = 'Ap&otheken speichern...'
         TabOrder = 0
         Visible = False
         OnClick = btnNurAposSpeichernClick
+        ExplicitLeft = 75
       end
       object Panel6: TPanel
         Left = 0
@@ -409,6 +415,7 @@ object frmMain: TfrmMain
       Caption = 'Daten drucken'
       ShortCut = 16464
       OnExecute = actDatenDruckenExecute
+    end
     end
   end
 end

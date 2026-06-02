@@ -1363,12 +1363,22 @@ end;
 procedure TfrmMain.rbDatenBuendelnClick(Sender: TObject);
 begin
   cbDoppelteEntfernen.Enabled := True;
+  cbKompakteDarstellung.Enabled := True;
 end;
 
 procedure TfrmMain.rbDatenNichtBuendelnClick(Sender: TObject);
 begin
   cbDoppelteEntfernen.Checked := False;
   cbDoppelteEntfernen.Enabled := False;
+  if (Sender is TRadioButton) and (TRadioButton(Sender).Name <> 'rbDatenNichtBuendeln') then
+  begin
+    cbKompakteDarstellung.Checked := True;
+    cbKompakteDarstellung.Enabled := False;
+  end
+  else
+  begin
+    cbKompakteDarstellung.Enabled := True;
+  end;
 end;
 
 function TfrmMain.ReformatData(ALog: TStrings {Default nil}): Boolean;
